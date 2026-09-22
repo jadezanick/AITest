@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>จองโต๊ะ — บ้านสวนคาเฟ่</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --espresso:#2A1D14;
+    --espresso-2:#3D2A1D;
+    --parchment:#F1E4CC;
+    --parchment-2:#FBF3E3;
+    --teal:#1F6F63;
+    --teal-dark:#154F46;
+    --teal-tint:#E4EFEC;
+    --brick:#B24A3C;
+    --brick-tint:#F3E2DE;
+    --gold:#D9A441;
+    --ink:#2A1D14;
+    --ink-soft:rgba(42,29,20,.62);
+    --ink-faint:rgba(42,29,20,.38);
+    --radius:14px;
+    --radius-sm:9px;
+    --shadow:0 14px 34px rgba(42,29,20,.16);
+    --shadow-sm:0 4px 12px rgba(42,29,20,.10);
+  }
+  *{box-sizing:border-box}
+  html{scroll-padding-top:env(safe-area-inset-top,0px)}
+  body{
+    margin:0;
+    background:var(--parchment);
+    color:var(--ink);
+    font-family:'Work Sans',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  h1,h2,h3,.serif{font-family:'Fraunces',Georgia,serif}
+  a{color:inherit}
+  button{font-family:inherit}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    background:linear-gradient(175deg,var(--espresso),var(--espresso-2) 85%);
+    color:var(--parchment-2);
+    padding:44px 20px 40px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero-inner{max-width:760px;margin:0 auto;position:relative;z-index:2}
+  .hero .eyebrow-icon{opacity:.85;margin-bottom:14px}
+  .hero h1{font-size:clamp(28px,5vw,40px);font-weight:600;margin:0 0 8px;letter-spacing:-.01em}
+  .hero p.tagline{margin:0 0 28px;color:rgba(241,228,204,.72);font-size:15.5px;max-width:46ch;line-height:1.55}
+
+  .date-row{
+    display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px 20px;
+  }
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:13px;color:rgba(241,228,204,.68)}
+  input[type="date"]{
+    appearance:none;-webkit-appearance:none;
+    background:var(--parchment-2);
+    border:none;border-radius:var(--radius-sm);
+    padding:11px 14px;
+    font-family:'Work Sans',sans-serif;font-size:15.5px;font-weight:500;
+    color:var(--espresso);
+    min-width:190px;
+  }
+  input[type="date"]:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .today-btn{
+    background:transparent;border:1px solid rgba(241,228,204,.35);
+    color:var(--parchment-2);border-radius:var(--radius-sm);
+    padding:11px 16px;font-size:14.5px;font-weight:500;cursor:pointer;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .today-btn:hover{background:rgba(241,228,204,.08);border-color:rgba(241,228,204,.6)}
+  .today-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+  /* ---------- Main ---------- */
+  main{max-width:900px;margin:0 auto;padding:32px 20px 80px}
+
+  .section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .section-head h2{font-size:22px;font-weight:600;margin:0}
+  .selected-date{color:var(--ink-soft);font-size:14.5px}
+
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:18px;font-size:13.5px;color:var(--ink-soft)}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .swatch{width:13px;height:13px;border-radius:4px;display:inline-block}
+  .swatch.free{background:var(--teal-tint);border:1.5px solid var(--teal)}
+  .swatch.taken{background:var(--brick-tint);border:1.5px solid var(--brick)}
+  .swatch.past{background:#e7ddc8;border:1.5px solid #cabd9c}
+
+  .empty-state{
+    background:var(--parchment-2);border-radius:var(--radius);padding:30px 22px;
+    text-align:center;color:var(--ink-soft);font-size:15px;box-shadow:var(--shadow-sm);
+  }
+
+  .grid-wrap{
+    background:var(--parchment-2);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow-sm);
+    overflow:hidden;
+  }
+  .grid-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table.grid{border-collapse:separate;border-spacing:0;width:100%;min-width:640px}
+  table.grid th, table.grid td{padding:0;text-align:center}
+  table.grid thead th{
+    background:var(--parchment-2);
+    position:sticky;top:0;z-index:2;
+    font-family:'Work Sans',sans-serif;font-weight:600;font-size:13.5px;
+    color:var(--ink-soft);
+    padding:14px 6px 10px;
+    border-bottom:1px solid rgba(42,29,20,.10);
+  }
+  table.grid thead th:first-child{
+    position:sticky;left:0;top:0;z-index:3;text-align:left;padding-left:16px;
+  }
+  table.grid tbody th{
+    position:sticky;left:0;z-index:1;
+    background:var(--parchment-2);
+    text-align:left;padding:0 14px;
+    border-right:1px solid rgba(42,29,20,.10);
+    white-space:nowrap;
+  }
+  table.grid tbody th .tname{font-family:'Fraunces',serif;font-size:16px;font-weight:600;display:block}
+  table.grid tbody th .tcap{font-size:12px;color:var(--ink-faint)}
+  table.grid tbody tr:not(:last-child) td, table.grid tbody tr:not(:last-child) th{
+    border-bottom:1px solid rgba(42,29,20,.08);
+  }
+  td.slot-cell{padding:7px}
+  .slot{
+    width:100%;
+    min-width:72px;
+    border-radius:8px;
+    border:1.5px solid transparent;
+    padding:10px 4px;
+    font-size:13.5px;font-weight:600;
+    cursor:pointer;
+    background:var(--teal-tint);
+    border-color:rgba(31,111,99,.35);
+    color:var(--teal-dark);
+    transition:transform .1s ease, background .15s ease, box-shadow .15s ease;
+  }
+  .slot:hover:not(:disabled){background:var(--teal);color:#fff;transform:translateY(-1px)}
+  .slot:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .slot.booked{
+    background:var(--brick-tint);border-color:rgba(178,74,60,.3);
+    color:var(--brick);cursor:not-allowed;font-weight:500;
+  }
+  .slot.past{
+    background:transparent;border-color:rgba(42,29,20,.12);
+    color:var(--ink-faint);cursor:not-allowed;font-weight:500;
+  }
+  .slot.pending{opacity:.55;cursor:wait}
+
+  .refresh-note{font-size:12.5px;color:var(--ink-faint);margin-top:12px;text-align:right}
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(42,29,20,.42);
+    display:flex;align-items:flex-end;justify-content:center;
+    z-index:50;opacity:0;pointer-events:none;transition:opacity .18s ease;
+    padding:0;
+  }
+  .overlay.open{opacity:1;pointer-events:auto}
+  @media (min-width:600px){
+    .overlay{align-items:center;padding:20px}
+  }
+  .sheet{
+    background:var(--parchment-2);
+    width:100%;max-width:440px;
+    border-radius:20px 20px 0 0;
+    box-shadow:var(--shadow);
+    padding:26px 22px calc(26px + env(safe-area-inset-bottom,0px));
+    transform:translateY(16px);transition:transform .2s ease;
+    max-height:88vh;overflow-y:auto;
+  }
+  @media (min-width:600px){ .sheet{border-radius:18px} }
+  .overlay.open .sheet{transform:translateY(0)}
+  .sheet-handle{width:36px;height:4px;background:rgba(42,29,20,.18);border-radius:3px;margin:0 auto 18px;display:block}
+  @media (min-width:600px){ .sheet-handle{display:none} }
+
+  .sheet h3{margin:0 0 4px;font-size:20px;font-weight:600}
+  .sheet .sub{color:var(--ink-soft);font-size:14px;margin:0 0 20px}
+
+  .form-row{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+  .form-row label{font-size:13.5px;font-weight:600;color:var(--espresso)}
+  .form-row input{
+    border:1.5px solid rgba(42,29,20,.16);border-radius:var(--radius-sm);
+    padding:11px 13px;font-size:15px;font-family:inherit;background:#fff;color:var(--ink);
+  }
+  .form-row input:focus-visible{outline:2px solid var(--gold);outline-offset:1px;border-color:var(--gold)}
+
+  .warn{
+    background:var(--brick-tint);color:var(--brick);
+    border-radius:var(--radius-sm);padding:11px 13px;font-size:13.5px;
+    margin-bottom:16px;line-height:1.5;
+  }
+  .warn button.link{
+    background:none;border:none;padding:0;color:var(--brick);font-weight:700;
+    text-decoration:underline;cursor:pointer;font-size:13.5px;font-family:inherit;
+  }
+
+  .sheet-actions{display:flex;gap:10px;margin-top:6px}
+  .btn{
+    border:none;border-radius:var(--radius-sm);padding:13px 18px;
+    font-size:15px;font-weight:600;cursor:pointer;flex:1;
+    transition:background .15s ease, opacity .15s ease;
+  }
+  .btn-primary{background:var(--teal);color:#fff}
+  .btn-primary:hover:not(:disabled){background:var(--teal-dark)}
+  .btn-primary:disabled{opacity:.55;cursor:wait}
+  .btn-ghost{background:transparent;color:var(--ink-soft);flex:0 0 auto}
+  .btn-ghost:hover{color:var(--ink)}
+
+  .form-error{color:var(--brick);font-size:13.5px;margin:-8px 0 16px}
+
+  /* ---------- Confirmation ---------- */
+  .confirm-sheet{text-align:center}
+  .confirm-icon{
+    width:52px;height:52px;border-radius:50%;background:var(--teal-tint);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 16px;
+  }
+  .confirm-ticket{
+    border:1.5px dashed rgba(42,29,20,.25);border-radius:12px;
+    padding:16px 18px;margin:18px 0 22px;text-align:left;
+  }
+  .confirm-ticket div{display:flex;justify-content:space-between;font-size:14.5px;padding:5px 0}
+  .confirm-ticket div span:first-child{color:var(--ink-soft)}
+  .confirm-ticket div span:last-child{font-weight:600}
+
+  .toast{
+    position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120%);
+    background:var(--espresso);color:var(--parchment-2);
+    padding:13px 20px;border-radius:var(--radius-sm);font-size:14px;
+    box-shadow:var(--shadow);z-index:60;transition:transform .22s ease;
+    max-width:88vw;text-align:center;
+  }
+  .toast.show{transform:translateX(-50%) translateY(0)}
+
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <svg class="eyebrow-icon" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M9 15h16v6a8 8 0 0 1-8 8h0a8 8 0 0 1-8-8v-6Z" stroke="#D9A441" stroke-width="1.6"/>
+      <path d="M25 17h1.5a3 3 0 0 1 0 6H25" stroke="#D9A441" stroke-width="1.6"/>
+      <path d="M13 10c-.8-1.4-.6-2.4.6-3.6M17.5 10c-.8-1.4-.6-2.4.6-3.6M22 10c-.8-1.4-.6-2.4.6-3.6" stroke="#D9A441" stroke-width="1.4" stroke-linecap="round"/>
+    </svg>
+    <h1>บ้านสวนคาเฟ่</h1>
+    <p class="tagline">เลือกวันที่ แล้วแตะช่วงเวลาที่ว่างเพื่อจองโต๊ะได้ทันที ไม่ต้องสมัครสมาชิก</p>
+    <div class="date-row">
+      <div class="field">
+        <label for="date-input">วันที่ต้องการจอง</label>
+        <input type="date" id="date-input" aria-describedby="date-hint">
+      </div>
+      <button class="today-btn" id="today-btn" type="button">วันนี้</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="section-head">
+    <h2>ผังโต๊ะ</h2>
+    <span class="selected-date" id="selected-date-label"></span>
+  </div>
+
+  <div class="legend">
+    <span><i class="swatch free"></i> ว่าง</span>
+    <span><i class="swatch taken"></i> ไม่ว่าง</span>
+    <span><i class="swatch past"></i> เลยเวลาแล้ว</span>
+  </div>
+
+  <div id="grid-area">
+    <div class="empty-state">กรุณาเลือกวันที่ด้านบนเพื่อดูผังโต๊ะว่าง</div>
+  </div>
+</main>
+
+<!-- Booking form sheet -->
+<div class="overlay" id="booking-overlay" role="dialog" aria-modal="true" aria-labelledby="booking-title">
+  <div class="sheet">
+    <span class="sheet-handle"></span>
+    <h3 id="booking-title">จองโต๊ะ</h3>
+    <p class="sub" id="booking-sub"></p>
+
+    <div id="capacity-warning" class="warn" hidden></div>
+
+    <form id="booking-form">
+      <div class="form-row">
+        <label for="cust-name">ชื่อผู้จอง</label>
+        <input type="text" id="cust-name" name="name" required autocomplete="name" placeholder="เช่น คุณนิค">
+      </div>
+      <div class="form-row">
+        <label for="cust-phone">เบอร์โทรศัพท์</label>
+        <input type="tel" id="cust-phone" name="phone" required autocomplete="tel" placeholder="08x-xxx-xxxx" pattern="[0-9\-+ ]{9,15}">
+      </div>
+      <div class="form-row">
+        <label for="cust-party">จำนวนคน</label>
+        <input type="number" id="cust-party" name="party" required min="1" max="20" placeholder="เช่น 2">
+      </div>
+      <p class="form-error" id="form-error" hidden></p>
+      <div class="sheet-actions">
+        <button type="button" class="btn btn-ghost" id="cancel-btn">ยกเลิก</button>
+        <button type="submit" class="btn btn-primary" id="submit-btn">ยืนยันการจอง</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Confirmation sheet -->
+<div class="overlay" id="confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+  <div class="sheet confirm-sheet">
+    <span class="sheet-handle"></span>
+    <div class="confirm-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 7" stroke="#1F6F63" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <h3 id="confirm-title">จองสำเร็จ</h3>
+    <p class="sub">ขอบคุณที่ใช้บริการ แล้วพบกันนะคะ</p>
+    <div class="confirm-ticket" id="confirm-ticket"></div>
+    <div class="sheet-actions">
+      <button type="button" class="btn btn-primary" id="confirm-close-btn" style="flex:1">เรียบร้อย</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ============ CONFIG — แก้ 2 บรรทัดนี้ให้เป็นของโปรเจกต์ Supabase คุณ ============
+  const SUPABASE_URL = "https://eysfmpwgarwktuhkuoyy.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_cLoj0X_6MVA5mO1m6YdVDA_GsT32FoI";
+  // ==================================================================================
+
+  const TABLES = [
+    { id: 1, name: "โต๊ะ 1", capacity: 2 },
+    { id: 2, name: "โต๊ะ 2", capacity: 4 },
+    { id: 3, name: "โต๊ะ 3", capacity: 4 },
+    { id: 4, name: "โต๊ะ 4", capacity: 6 }
+  ];
+
+  const OPEN_HOUR = 11;
+  const LAST_SLOT_HOUR = 20; // last bookable start time (shop closes 21:00)
+  const TIME_SLOTS = [];
+  for (let h = OPEN_HOUR; h <= LAST_SLOT_HOUR; h++) {
+    TIME_SLOTS.push(String(h).padStart(2, "0") + ":00");
+  }
+  const REFRESH_INTERVAL_MS = 20000;
+
+  let supabaseClient = null;
+  let configOk = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+  if (configOk) {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+
+  const dateInput = document.getElementById("date-input");
+  const todayBtn = document.getElementById("today-btn");
+  const gridArea = document.getElementById("grid-area");
+  const selectedDateLabel = document.getElementById("selected-date-label");
+  const toastEl = document.getElementById("toast");
+
+  const bookingOverlay = document.getElementById("booking-overlay");
+  const bookingSub = document.getElementById("booking-sub");
+  const bookingForm = document.getElementById("booking-form");
+  const capacityWarning = document.getElementById("capacity-warning");
+  const formError = document.getElementById("form-error");
+  const cancelBtn = document.getElementById("cancel-btn");
+  const submitBtn = document.getElementById("submit-btn");
+  const custName = document.getElementById("cust-name");
+  const custPhone = document.getElementById("cust-phone");
+  const custParty = document.getElementById("cust-party");
+
+  const confirmOverlay = document.getElementById("confirm-overlay");
+  const confirmTicket = document.getElementById("confirm-ticket");
+  const confirmCloseBtn = document.getElementById("confirm-close-btn");
+
+  let currentDate = null;         // "YYYY-MM-DD"
+  let bookedSet = new Set();      // "tableId|HH:MM"
+  let pollTimer = null;
+  let pendingSelection = null;    // { table, slot }
+
+  // ---------- helpers ----------
+  function todayStr() {
+    const d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function key(tableId, slot) { return tableId + "|" + slot; }
+  function isPastSlot(dateStr, slot) {
+    if (dateStr !== todayStr()) return false;
+    const now = new Date();
+    const [h] = slot.split(":").map(Number);
+    return now.getHours() >= h;
+  }
+  function formatDateLabel(dateStr) {
+    if (!dateStr) return "";
+    const d = new Date(dateStr + "T00:00:00");
+    return d.toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  }
+  function showToast(msg, ms) {
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => toastEl.classList.remove("show"), ms || 3200);
+  }
+  function openOverlay(el) { el.classList.add("open"); }
+  function closeOverlay(el) { el.classList.remove("open"); }
+
+  // ---------- data loading ----------
+  async function loadAvailability(dateStr) {
+    if (!configOk) {
+      gridArea.innerHTML = '<div class="empty-state">ยังไม่ได้ตั้งค่า Supabase — กรุณาใส่ SUPABASE_URL และ SUPABASE_ANON_KEY ในไฟล์ index.html</div>';
+      return;
+    }
+    const { data, error } = await supabaseClient
+      .from("reservation_status")
+      .select("table_id,time_slot")
+      .eq("res_date", dateStr);
+
+    if (error) {
+      console.error(error);
+      showToast("โหลดข้อมูลไม่สำเร็จ กรุณาลองใหม่");
+      return;
+    }
+
+    bookedSet = new Set();
+    (data || []).forEach(row => {
+      const hhmm = String(row.time_slot).slice(0, 5);
+      bookedSet.add(key(row.table_id, hhmm));
+    });
+    renderGrid(dateStr);
+  }
+
+  function startPolling(dateStr) {
+    stopPolling();
+    pollTimer = setInterval(() => loadAvailability(dateStr), REFRESH_INTERVAL_MS);
+  }
+  function stopPolling() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = null;
+  }
+
+  // ---------- rendering ----------
+  function renderGrid(dateStr) {
+    let thead = '<tr><th>โต๊ะ</th>' + TIME_SLOTS.map(s => `<th>${s}</th>`).join("") + "</tr>";
+    let rows = TABLES.map(t => {
+      const cells = TIME_SLOTS.map(slot => {
+        const isBooked = bookedSet.has(key(t.id, slot));
+        const isPast = isPastSlot(dateStr, slot);
+        let cls = "slot", label = "ว่าง", disabled = "";
+        if (isPast) { cls += " past"; label = "หมดเวลา"; disabled = "disabled"; }
+        else if (isBooked) { cls += " booked"; label = "ไม่ว่าง"; disabled = "disabled"; }
+        return `<td class="slot-cell"><button type="button" class="${cls}" ${disabled}
+                  data-table="${t.id}" data-slot="${slot}"
+                  aria-label="${t.name} เวลา ${slot} ${label}">${label === "ว่าง" ? slot : label}</button></td>`;
+      }).join("");
+      return `<tr><th scope="row"><span class="tname">${t.name}</span><span class="tcap">นั่งได้ ${t.capacity} คน</span></th>${cells}</tr>`;
+    }).join("");
+
+    gridArea.innerHTML = `
+      <div class="grid-wrap">
+        <div class="grid-scroll">
+          <table class="grid">
+            <thead>${thead}</thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+      <p class="refresh-note">ข้อมูลอัปเดตอัตโนมัติทุก 20 วินาที</p>
+    `;
+
+    gridArea.querySelectorAll(".slot:not([disabled])").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const tableId = Number(btn.dataset.table);
+        const slot = btn.dataset.slot;
+        const table = TABLES.find(t => t.id === tableId);
+        openBookingSheet(table, slot);
+      });
+    });
+  }
+
+  // ---------- booking sheet ----------
+  function openBookingSheet(table, slot) {
+    pendingSelection = { table, slot };
+    bookingSub.textContent = `${table.name} (นั่งได้ ${table.capacity} คน) · ${formatDateLabel(currentDate)} · เวลา ${slot} น.`;
+    bookingForm.reset();
+    capacityWarning.hidden = true;
+    formError.hidden = true;
+    submitBtn.disabled = false;
+    submitBtn.textContent = "ยืนยันการจอง";
+    openOverlay(bookingOverlay);
+    setTimeout(() => custName.focus(), 50);
+  }
+
+  function findLargerFreeTable(slot, partySize, excludeTableId) {
+    return TABLES
+      .filter(t => t.id !== excludeTableId && t.capacity >= partySize)
+      .filter(t => !bookedSet.has(key(t.id, slot)))
+      .sort((a, b) => a.capacity - b.capacity)[0] || null;
+  }
+
+  custParty.addEventListener("input", () => {
+    if (!pendingSelection) return;
+    const size = Number(custParty.value);
+    const { table, slot } = pendingSelection;
+    if (size && size > table.capacity) {
+      const alt = findLargerFreeTable(slot, size, table.id);
+      capacityWarning.hidden = false;
+      capacityWarning.innerHTML = alt
+        ? `${table.name} นั่งได้สูงสุด ${table.capacity} คน สำหรับ ${size} คน แนะนำ
+           <button type="button" class="link" id="switch-table-btn">เปลี่ยนไปเป็น ${alt.name} (นั่งได้ ${alt.capacity} คน)</button> แทน`
+        : `${table.name} นั่งได้สูงสุด ${table.capacity} คน และไม่มีโต๊ะอื่นที่ว่างในเวลานี้รองรับ ${size} คนได้ — ลองเลือกเวลาอื่นดูนะคะ`;
+      const switchBtn = document.getElementById("switch-table-btn");
+      if (switchBtn && alt) {
+        switchBtn.addEventListener("click", () => {
+          pendingSelection.table = alt;
+          bookingSub.textContent = `${alt.name} (นั่งได้ ${alt.capacity} คน) · ${formatDateLabel(currentDate)} · เวลา ${slot} น.`;
+          capacityWarning.hidden = true;
+        });
+      }
+    } else {
+      capacityWarning.hidden = true;
+    }
+  });
+
+  cancelBtn.addEventListener("click", () => closeOverlay(bookingOverlay));
+  bookingOverlay.addEventListener("click", (e) => { if (e.target === bookingOverlay) closeOverlay(bookingOverlay); });
+
+  bookingForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!pendingSelection) return;
+    const { table, slot } = pendingSelection;
+    const name = custName.value.trim();
+    const phone = custPhone.value.trim();
+    const party = Number(custParty.value);
+
+    if (party > table.capacity) {
+      formError.hidden = false;
+      formError.textContent = `จำนวนคนเกินความจุของ ${table.name} กรุณาเลือกโต๊ะที่แนะนำ หรือปรับจำนวนคน`;
+      return;
+    }
+    formError.hidden = true;
+    submitBtn.disabled = true;
+    submitBtn.textContent = "กำลังบันทึก...";
+
+    const { error } = await supabaseClient.rpc("book_reservation", {
+      p_table_id: table.id,
+      p_date: currentDate,
+      p_time_slot: slot,
+      p_name: name,
+      p_phone: phone,
+      p_party_size: party
+    });
+
+    if (error) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "ยืนยันการจอง";
+      const msg = String(error.message || "");
+      if (msg.includes("SLOT_TAKEN")) {
+        formError.hidden = false;
+        formError.textContent = "ขออภัย ช่วงเวลานี้เพิ่งถูกจองไปเมื่อครู่ กรุณาเลือกช่วงเวลาอื่น";
+        closeOverlay(bookingOverlay);
+        showToast("ช่วงเวลานี้ถูกจองไปแล้ว กำลังรีเฟรชผังโต๊ะ...");
+        loadAvailability(currentDate);
+      } else if (msg.includes("PARTY_TOO_LARGE")) {
+        formError.hidden = false;
+        formError.textContent = `จำนวนคนเกินความจุของ ${table.name}`;
+      } else {
+        formError.hidden = false;
+        formError.textContent = "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง";
+        console.error(error);
+      }
+      return;
+    }
+
+    closeOverlay(bookingOverlay);
+    showConfirmation(table, slot, name, party);
+    loadAvailability(currentDate);
+  });
+
+  function showConfirmation(table, slot, name, party) {
+    confirmTicket.innerHTML = `
+      <div><span>ชื่อผู้จอง</span><span>${escapeHtml(name)}</span></div>
+      <div><span>โต๊ะ</span><span>${table.name}</span></div>
+      <div><span>วันที่</span><span>${formatDateLabel(currentDate)}</span></div>
+      <div><span>เวลา</span><span>${slot} น.</span></div>
+      <div><span>จำนวนคน</span><span>${party} คน</span></div>
+    `;
+    openOverlay(confirmOverlay);
+  }
+  confirmCloseBtn.addEventListener("click", () => closeOverlay(confirmOverlay));
+  confirmOverlay.addEventListener("click", (e) => { if (e.target === confirmOverlay) closeOverlay(confirmOverlay); });
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  // ---------- date selection ----------
+  function selectDate(dateStr) {
+    currentDate = dateStr;
+    dateInput.value = dateStr;
+    selectedDateLabel.textContent = formatDateLabel(dateStr);
+    gridArea.innerHTML = '<div class="empty-state">กำลังโหลดผังโต๊ะ...</div>';
+    loadAvailability(dateStr);
+    startPolling(dateStr);
+  }
+
+  dateInput.min = todayStr();
+  dateInput.addEventListener("change", () => {
+    if (dateInput.value) selectDate(dateInput.value);
+  });
+  todayBtn.addEventListener("click", () => selectDate(todayStr()));
+
+  // auto-select today on load
+  selectDate(todayStr());
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeOverlay(bookingOverlay);
+      closeOverlay(confirmOverlay);
+    }
+  });
+})();
+</script>
+</body>
+</html>
