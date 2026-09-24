@@ -1,638 +1,453 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>จองโต๊ะ — บ้านสวนคาเฟ่</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>โหวต Improvement เดือนถัดไป — INS Squad Retro</title>
+
+<!-- ========================================================================
+  SUPABASE SETUP — แก้ 2 บรรทัดนี้ก่อน deploy
+  1) ไปสร้างโปรเจกต์ฟรีที่ https://supabase.com
+  2) รันสคริปต์ SQL ใน supabase_setup.sql (ไฟล์แยกที่ให้มาด้วย) ใน SQL Editor
+  3) เอาค่าจาก Project Settings > API มาใส่ 2 บรรทัดด้านล่างนี้
+     - Project URL          -> SUPABASE_URL
+     - anon public API key  -> SUPABASE_ANON_KEY
+========================================================================= -->
+<script>
+  const SUPABASE_URL = "https://oxmraoamrcefndhxsftz.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_sjLmNVP7laSQ6q1IiipL_g_5-CL9Y50";
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
-  :root{
-    --espresso:#2A1D14;
-    --espresso-2:#3D2A1D;
-    --parchment:#F1E4CC;
-    --parchment-2:#FBF3E3;
-    --teal:#1F6F63;
-    --teal-dark:#154F46;
-    --teal-tint:#E4EFEC;
-    --brick:#B24A3C;
-    --brick-tint:#F3E2DE;
-    --gold:#D9A441;
-    --ink:#2A1D14;
-    --ink-soft:rgba(42,29,20,.62);
-    --ink-faint:rgba(42,29,20,.38);
-    --radius:14px;
-    --radius-sm:9px;
-    --shadow:0 14px 34px rgba(42,29,20,.16);
-    --shadow-sm:0 4px 12px rgba(42,29,20,.10);
+  :root {
+    --bg: #f5f7fa; --card-bg: #ffffff; --text: #1a2233; --text-dim: #667085;
+    --border: #e3e7ee; --accent: #2f5ce0; --accent-dim: #eef2ff;
+    --start-color: #16794f; --start-bg: #e6f6ee; --stop-color: #b42318; --stop-bg: #fdeceb;
+    --open-color: #9c0006; --open-bg: #ffe4e3; --inprogress-color: #9c6500; --inprogress-bg: #fff3cd;
+    --bar-track: #eef1f6; --shadow: 0 1px 3px rgba(20,25,40,0.08), 0 1px 2px rgba(20,25,40,0.06);
   }
-  *{box-sizing:border-box}
-  html{scroll-padding-top:env(safe-area-inset-top,0px)}
-  body{
-    margin:0;
-    background:var(--parchment);
-    color:var(--ink);
-    font-family:'Work Sans',system-ui,sans-serif;
-    -webkit-font-smoothing:antialiased;
-    padding-top:env(safe-area-inset-top,0px);
-    padding-bottom:env(safe-area-inset-bottom,0px);
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161f; --card-bg: #1d2130; --text: #eef0f5; --text-dim: #9aa1b5;
+      --border: #2b3040; --accent: #6d8bff; --accent-dim: #232a45;
+      --start-color: #4ede9a; --start-bg: #123023; --stop-color: #ff8a80; --stop-bg: #3a1d1c;
+      --open-color: #ff9e97; --open-bg: #3a1d1c; --inprogress-color: #ffd166; --inprogress-bg: #3a2f10;
+      --bar-track: #262b3c; --shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
   }
-  h1,h2,h3,.serif{font-family:'Fraunces',Georgia,serif}
-  a{color:inherit}
-  button{font-family:inherit}
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Thai", Sarabun, Roboto, sans-serif;
+  }
+  body { padding-bottom: 90px; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 20px 16px 8px; }
+  h1 { font-size: 1.4rem; margin: 4px 0 6px; }
+  .sub { color: var(--text-dim); font-size: 0.92rem; line-height: 1.5; }
+  .rules, .banner {
+    border-radius: 10px; padding: 10px 14px; font-size: 0.86rem; margin-top: 12px;
+  }
+  .rules { background: var(--accent-dim); color: var(--accent); }
+  .banner.ok { background: var(--start-bg); color: var(--start-color); margin-top: 10px; }
+  .banner.warn { background: var(--inprogress-bg); color: var(--inprogress-color); margin-top: 10px; }
+  .banner.err { background: var(--stop-bg); color: var(--stop-color); margin-top: 10px; }
+  .tabs { display: flex; gap: 8px; margin: 16px 0 14px; flex-wrap: wrap; }
+  .tab {
+    border: 1px solid var(--border); background: var(--card-bg); color: var(--text-dim);
+    padding: 7px 14px; border-radius: 999px; font-size: 0.85rem; cursor: pointer; user-select: none;
+  }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .item {
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px;
+    padding: 13px 14px; margin-bottom: 10px; display: flex; gap: 12px; align-items: flex-start;
+    cursor: pointer; box-shadow: var(--shadow); transition: border-color .12s, transform .08s;
+  }
+  .item:active { transform: scale(0.997); }
+  .item.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset, var(--shadow); }
+  .item.locked { opacity: 0.55; cursor: default; }
+  .chk {
+    width: 22px; height: 22px; min-width: 22px; border-radius: 7px; border: 2px solid var(--border);
+    margin-top: 2px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #fff;
+    background: var(--card-bg);
+  }
+  .item.selected .chk { background: var(--accent); border-color: var(--accent); }
+  .item-body { flex: 1; min-width: 0; }
+  .item-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .badges { display: flex; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+  .badge { font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; letter-spacing: .02em; }
+  .badge.cat-start { background: var(--start-bg); color: var(--start-color); }
+  .badge.cat-stop { background: var(--stop-bg); color: var(--stop-color); }
+  .badge.status-open { background: var(--open-bg); color: var(--open-color); }
+  .badge.status-inprogress { background: var(--inprogress-bg); color: var(--inprogress-color); }
+  .badge.theme { background: var(--bar-track); color: var(--text-dim); }
+  .topic { font-size: 0.92rem; line-height: 1.45; }
+  .idtag { color: var(--text-dim); font-size: 0.72rem; margin-left: 4px; }
+  .info-btn {
+    border: none; background: var(--bar-track); color: var(--text-dim); width: 26px; height: 26px;
+    min-width: 26px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; transition: transform .15s;
+  }
+  .info-btn.open { background: var(--accent-dim); color: var(--accent); transform: rotate(180deg); }
+  .detail {
+    margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border);
+    font-size: 0.82rem; line-height: 1.55; display: none;
+  }
+  .detail.open { display: block; }
+  .detail dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; }
+  .detail dt { color: var(--text-dim); white-space: nowrap; font-weight: 600; }
+  .detail dd { margin: 0; }
 
-  /* ---------- Hero ---------- */
-  .hero{
-    background:linear-gradient(175deg,var(--espresso),var(--espresso-2) 85%);
-    color:var(--parchment-2);
-    padding:44px 20px 40px;
-    position:relative;
-    overflow:hidden;
+  .footer-bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    background: var(--card-bg); border-top: 1px solid var(--border);
+    padding: 10px 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 -2px 10px rgba(0,0,0,0.06);
   }
-  .hero-inner{max-width:760px;margin:0 auto;position:relative;z-index:2}
-  .hero .eyebrow-icon{opacity:.85;margin-bottom:14px}
-  .hero h1{font-size:clamp(28px,5vw,40px);font-weight:600;margin:0 0 8px;letter-spacing:-.01em}
-  .hero p.tagline{margin:0 0 28px;color:rgba(241,228,204,.72);font-size:15.5px;max-width:46ch;line-height:1.55}
-
-  .date-row{
-    display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px 20px;
+  .count-pill { font-size: 0.85rem; color: var(--text-dim); white-space: nowrap; }
+  .count-pill b { color: var(--text); }
+  .submit-btn {
+    flex: 1; background: var(--accent); color: #fff; border: none; border-radius: 12px;
+    padding: 12px 16px; font-size: 0.95rem; font-weight: 700; cursor: pointer;
   }
-  .field{display:flex;flex-direction:column;gap:6px}
-  .field label{font-size:13px;color:rgba(241,228,204,.68)}
-  input[type="date"]{
-    appearance:none;-webkit-appearance:none;
-    background:var(--parchment-2);
-    border:none;border-radius:var(--radius-sm);
-    padding:11px 14px;
-    font-family:'Work Sans',sans-serif;font-size:15.5px;font-weight:500;
-    color:var(--espresso);
-    min-width:190px;
-  }
-  input[type="date"]:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-  .today-btn{
-    background:transparent;border:1px solid rgba(241,228,204,.35);
-    color:var(--parchment-2);border-radius:var(--radius-sm);
-    padding:11px 16px;font-size:14.5px;font-weight:500;cursor:pointer;
-    transition:background .15s ease, border-color .15s ease;
-  }
-  .today-btn:hover{background:rgba(241,228,204,.08);border-color:rgba(241,228,204,.6)}
-  .today-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-
-  /* ---------- Main ---------- */
-  main{max-width:900px;margin:0 auto;padding:32px 20px 80px}
-
-  .section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-  .section-head h2{font-size:22px;font-weight:600;margin:0}
-  .selected-date{color:var(--ink-soft);font-size:14.5px}
-
-  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:18px;font-size:13.5px;color:var(--ink-soft)}
-  .legend span{display:inline-flex;align-items:center;gap:7px}
-  .swatch{width:13px;height:13px;border-radius:4px;display:inline-block}
-  .swatch.free{background:var(--teal-tint);border:1.5px solid var(--teal)}
-  .swatch.taken{background:var(--brick-tint);border:1.5px solid var(--brick)}
-  .swatch.past{background:#e7ddc8;border:1.5px solid #cabd9c}
-
-  .empty-state{
-    background:var(--parchment-2);border-radius:var(--radius);padding:30px 22px;
-    text-align:center;color:var(--ink-soft);font-size:15px;box-shadow:var(--shadow-sm);
-  }
-
-  .grid-wrap{
-    background:var(--parchment-2);
-    border-radius:var(--radius);
-    box-shadow:var(--shadow-sm);
-    overflow:hidden;
-  }
-  .grid-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  table.grid{border-collapse:separate;border-spacing:0;width:100%;min-width:640px}
-  table.grid th, table.grid td{padding:0;text-align:center}
-  table.grid thead th{
-    background:var(--parchment-2);
-    position:sticky;top:0;z-index:2;
-    font-family:'Work Sans',sans-serif;font-weight:600;font-size:13.5px;
-    color:var(--ink-soft);
-    padding:14px 6px 10px;
-    border-bottom:1px solid rgba(42,29,20,.10);
-  }
-  table.grid thead th:first-child{
-    position:sticky;left:0;top:0;z-index:3;text-align:left;padding-left:16px;
-  }
-  table.grid tbody th{
-    position:sticky;left:0;z-index:1;
-    background:var(--parchment-2);
-    text-align:left;padding:0 14px;
-    border-right:1px solid rgba(42,29,20,.10);
-    white-space:nowrap;
-  }
-  table.grid tbody th .tname{font-family:'Fraunces',serif;font-size:16px;font-weight:600;display:block}
-  table.grid tbody th .tcap{font-size:12px;color:var(--ink-faint)}
-  table.grid tbody tr:not(:last-child) td, table.grid tbody tr:not(:last-child) th{
-    border-bottom:1px solid rgba(42,29,20,.08);
-  }
-  td.slot-cell{padding:7px}
-  .slot{
-    width:100%;
-    min-width:72px;
-    border-radius:8px;
-    border:1.5px solid transparent;
-    padding:10px 4px;
-    font-size:13.5px;font-weight:600;
-    cursor:pointer;
-    background:var(--teal-tint);
-    border-color:rgba(31,111,99,.35);
-    color:var(--teal-dark);
-    transition:transform .1s ease, background .15s ease, box-shadow .15s ease;
-  }
-  .slot:hover:not(:disabled){background:var(--teal);color:#fff;transform:translateY(-1px)}
-  .slot:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-  .slot.booked{
-    background:var(--brick-tint);border-color:rgba(178,74,60,.3);
-    color:var(--brick);cursor:not-allowed;font-weight:500;
-  }
-  .slot.past{
-    background:transparent;border-color:rgba(42,29,20,.12);
-    color:var(--ink-faint);cursor:not-allowed;font-weight:500;
-  }
-  .slot.pending{opacity:.55;cursor:wait}
-
-  .refresh-note{font-size:12.5px;color:var(--ink-faint);margin-top:12px;text-align:right}
-
-  /* ---------- Modal ---------- */
-  .overlay{
-    position:fixed;inset:0;background:rgba(42,29,20,.42);
-    display:flex;align-items:flex-end;justify-content:center;
-    z-index:50;opacity:0;pointer-events:none;transition:opacity .18s ease;
-    padding:0;
-  }
-  .overlay.open{opacity:1;pointer-events:auto}
-  @media (min-width:600px){
-    .overlay{align-items:center;padding:20px}
-  }
-  .sheet{
-    background:var(--parchment-2);
-    width:100%;max-width:440px;
-    border-radius:20px 20px 0 0;
-    box-shadow:var(--shadow);
-    padding:26px 22px calc(26px + env(safe-area-inset-bottom,0px));
-    transform:translateY(16px);transition:transform .2s ease;
-    max-height:88vh;overflow-y:auto;
-  }
-  @media (min-width:600px){ .sheet{border-radius:18px} }
-  .overlay.open .sheet{transform:translateY(0)}
-  .sheet-handle{width:36px;height:4px;background:rgba(42,29,20,.18);border-radius:3px;margin:0 auto 18px;display:block}
-  @media (min-width:600px){ .sheet-handle{display:none} }
-
-  .sheet h3{margin:0 0 4px;font-size:20px;font-weight:600}
-  .sheet .sub{color:var(--ink-soft);font-size:14px;margin:0 0 20px}
-
-  .form-row{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
-  .form-row label{font-size:13.5px;font-weight:600;color:var(--espresso)}
-  .form-row input{
-    border:1.5px solid rgba(42,29,20,.16);border-radius:var(--radius-sm);
-    padding:11px 13px;font-size:15px;font-family:inherit;background:#fff;color:var(--ink);
-  }
-  .form-row input:focus-visible{outline:2px solid var(--gold);outline-offset:1px;border-color:var(--gold)}
-
-  .warn{
-    background:var(--brick-tint);color:var(--brick);
-    border-radius:var(--radius-sm);padding:11px 13px;font-size:13.5px;
-    margin-bottom:16px;line-height:1.5;
-  }
-  .warn button.link{
-    background:none;border:none;padding:0;color:var(--brick);font-weight:700;
-    text-decoration:underline;cursor:pointer;font-size:13.5px;font-family:inherit;
+  .submit-btn:disabled { background: var(--border); color: var(--text-dim); cursor: not-allowed; }
+  .edit-btn {
+    background: transparent; border: 1px solid var(--border); color: var(--text);
+    border-radius: 12px; padding: 12px 16px; font-size: 0.9rem; cursor: pointer;
   }
 
-  .sheet-actions{display:flex;gap:10px;margin-top:6px}
-  .btn{
-    border:none;border-radius:var(--radius-sm);padding:13px 18px;
-    font-size:15px;font-weight:600;cursor:pointer;flex:1;
-    transition:background .15s ease, opacity .15s ease;
-  }
-  .btn-primary{background:var(--teal);color:#fff}
-  .btn-primary:hover:not(:disabled){background:var(--teal-dark)}
-  .btn-primary:disabled{opacity:.55;cursor:wait}
-  .btn-ghost{background:transparent;color:var(--ink-soft);flex:0 0 auto}
-  .btn-ghost:hover{color:var(--ink)}
-
-  .form-error{color:var(--brick);font-size:13.5px;margin:-8px 0 16px}
-
-  /* ---------- Confirmation ---------- */
-  .confirm-sheet{text-align:center}
-  .confirm-icon{
-    width:52px;height:52px;border-radius:50%;background:var(--teal-tint);
-    display:flex;align-items:center;justify-content:center;margin:0 auto 16px;
-  }
-  .confirm-ticket{
-    border:1.5px dashed rgba(42,29,20,.25);border-radius:12px;
-    padding:16px 18px;margin:18px 0 22px;text-align:left;
-  }
-  .confirm-ticket div{display:flex;justify-content:space-between;font-size:14.5px;padding:5px 0}
-  .confirm-ticket div span:first-child{color:var(--ink-soft)}
-  .confirm-ticket div span:last-child{font-weight:600}
-
-  .toast{
-    position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120%);
-    background:var(--espresso);color:var(--parchment-2);
-    padding:13px 20px;border-radius:var(--radius-sm);font-size:14px;
-    box-shadow:var(--shadow);z-index:60;transition:transform .22s ease;
-    max-width:88vw;text-align:center;
-  }
-  .toast.show{transform:translateX(-50%) translateY(0)}
-
-  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-
-  @media (prefers-reduced-motion:reduce){
-    *{transition:none !important}
+  section.results { margin-top: 30px; }
+  .results h2 { font-size: 1.1rem; margin-bottom: 4px; }
+  .results .meta { color: var(--text-dim); font-size: 0.82rem; margin-bottom: 14px; }
+  .rrow { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .rrank { width: 24px; text-align: center; font-weight: 800; color: var(--text-dim); font-size: 0.85rem; }
+  .rbody { flex: 1; min-width: 0; }
+  .rtitle { font-size: 0.86rem; margin-bottom: 4px; display: flex; justify-content: space-between; gap: 8px; }
+  .rtitle .txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rtitle .cnt { font-weight: 700; color: var(--accent); white-space: nowrap; }
+  .rtrack { background: var(--bar-track); border-radius: 999px; height: 9px; overflow: hidden; }
+  .rfill { background: var(--accent); height: 100%; border-radius: 999px; transition: width .3s ease; }
+  .top1 .rfill { background: linear-gradient(90deg, #ffb020, #ff7a00); }
+  .top1 .cnt { color: #ff7a00; }
+  .empty { color: var(--text-dim); font-size: 0.86rem; text-align: center; padding: 20px 0; }
+  .config-error {
+    background: var(--stop-bg); color: var(--stop-color); border-radius: 12px; padding: 14px 16px;
+    font-size: 0.88rem; margin: 14px 0; line-height: 1.6;
   }
 </style>
 </head>
 <body>
+<div class="wrap">
+  <header>
+    <h1>🗳️ โหวต Improvement เดือนถัดไป</h1>
+    <div class="sub">INS Monthly Retrospective — เลือกหัวข้อ Start / Stop ที่ยัง <b>Open</b> หรือ <b>In&nbsp;Progress</b> ที่อยากให้ทีมโฟกัสแก้ไขในเดือนถัดไป โหวตนี้ไม่ต้อง login และไม่ระบุตัวตนผู้โหวต</div>
+    <div class="rules">✅ เลือกได้สูงสุด <b>3 หัวข้อ</b> ต่อคน — แตะการ์ดเพื่อเลือก/ยกเลิก กดปุ่ม▾เพื่อดูรายละเอียด</div>
+  </header>
 
-<header class="hero">
-  <div class="hero-inner">
-    <svg class="eyebrow-icon" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="M9 15h16v6a8 8 0 0 1-8 8h0a8 8 0 0 1-8-8v-6Z" stroke="#D9A441" stroke-width="1.6"/>
-      <path d="M25 17h1.5a3 3 0 0 1 0 6H25" stroke="#D9A441" stroke-width="1.6"/>
-      <path d="M13 10c-.8-1.4-.6-2.4.6-3.6M17.5 10c-.8-1.4-.6-2.4.6-3.6M22 10c-.8-1.4-.6-2.4.6-3.6" stroke="#D9A441" stroke-width="1.4" stroke-linecap="round"/>
-    </svg>
-    <h1>บ้านสวนคาเฟ่</h1>
-    <p class="tagline">เลือกวันที่ แล้วแตะช่วงเวลาที่ว่างเพื่อจองโต๊ะได้ทันที ไม่ต้องสมัครสมาชิก</p>
-    <div class="date-row">
-      <div class="field">
-        <label for="date-input">วันที่ต้องการจอง</label>
-        <input type="date" id="date-input" aria-describedby="date-hint">
-      </div>
-      <button class="today-btn" id="today-btn" type="button">วันนี้</button>
-    </div>
-  </div>
-</header>
+  <div id="configError"></div>
+  <div id="statusBanner"></div>
 
-<main>
-  <div class="section-head">
-    <h2>ผังโต๊ะ</h2>
-    <span class="selected-date" id="selected-date-label"></span>
+  <div class="tabs">
+    <div class="tab active" data-filter="All">ทั้งหมด</div>
+    <div class="tab" data-filter="Stop">🛑 Stop</div>
+    <div class="tab" data-filter="Start">🚀 Start</div>
   </div>
 
-  <div class="legend">
-    <span><i class="swatch free"></i> ว่าง</span>
-    <span><i class="swatch taken"></i> ไม่ว่าง</span>
-    <span><i class="swatch past"></i> เลยเวลาแล้ว</span>
-  </div>
+  <div id="list"></div>
 
-  <div id="grid-area">
-    <div class="empty-state">กรุณาเลือกวันที่ด้านบนเพื่อดูผังโต๊ะว่าง</div>
-  </div>
-</main>
-
-<!-- Booking form sheet -->
-<div class="overlay" id="booking-overlay" role="dialog" aria-modal="true" aria-labelledby="booking-title">
-  <div class="sheet">
-    <span class="sheet-handle"></span>
-    <h3 id="booking-title">จองโต๊ะ</h3>
-    <p class="sub" id="booking-sub"></p>
-
-    <div id="capacity-warning" class="warn" hidden></div>
-
-    <form id="booking-form">
-      <div class="form-row">
-        <label for="cust-name">ชื่อผู้จอง</label>
-        <input type="text" id="cust-name" name="name" required autocomplete="name" placeholder="เช่น คุณนิค">
-      </div>
-      <div class="form-row">
-        <label for="cust-phone">เบอร์โทรศัพท์</label>
-        <input type="tel" id="cust-phone" name="phone" required autocomplete="tel" placeholder="08x-xxx-xxxx" pattern="[0-9\-+ ]{9,15}">
-      </div>
-      <div class="form-row">
-        <label for="cust-party">จำนวนคน</label>
-        <input type="number" id="cust-party" name="party" required min="1" max="20" placeholder="เช่น 2">
-      </div>
-      <p class="form-error" id="form-error" hidden></p>
-      <div class="sheet-actions">
-        <button type="button" class="btn btn-ghost" id="cancel-btn">ยกเลิก</button>
-        <button type="submit" class="btn btn-primary" id="submit-btn">ยืนยันการจอง</button>
-      </div>
-    </form>
-  </div>
+  <section class="results">
+    <h2>📊 ผลการโหวต (ไม่ระบุตัวตน)</h2>
+    <div class="meta" id="resultsMeta">รอผลโหวต...</div>
+    <div id="results"></div>
+  </section>
 </div>
 
-<!-- Confirmation sheet -->
-<div class="overlay" id="confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
-  <div class="sheet confirm-sheet">
-    <span class="sheet-handle"></span>
-    <div class="confirm-icon">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 7" stroke="#1F6F63" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </div>
-    <h3 id="confirm-title">จองสำเร็จ</h3>
-    <p class="sub">ขอบคุณที่ใช้บริการ แล้วพบกันนะคะ</p>
-    <div class="confirm-ticket" id="confirm-ticket"></div>
-    <div class="sheet-actions">
-      <button type="button" class="btn btn-primary" id="confirm-close-btn" style="flex:1">เรียบร้อย</button>
-    </div>
-  </div>
+<div class="footer-bar">
+  <div class="count-pill">เลือกแล้ว <b id="selCount">0</b>/3</div>
+  <button class="edit-btn" id="editBtn" style="display:none;">แก้ไขโหวต</button>
+  <button class="submit-btn" id="submitBtn" disabled>ส่งโหวตของฉัน</button>
 </div>
-
-<div class="toast" id="toast"></div>
 
 <script>
-(function(){
-  "use strict";
+const MAX_VOTES = 3;
 
-  // ============ CONFIG — แก้ 2 บรรทัดนี้ให้เป็นของโปรเจกต์ Supabase คุณ ============
-  const SUPABASE_URL = "https://eysfmpwgarwktuhkuoyy.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_cLoj0X_6MVA5mO1m6YdVDA_GsT32FoI";
-  // ==================================================================================
+const ITEMS = [
+  {id:3,  cat:'Stop',  theme:'Solution Readiness',            topic:'ทีม Solution เตรียมตัว/หา background ไม่ทันตอนตอบคำถาม (No Surprises)', status:'Open',
+    firstRaised:'Jun-26', responsible:"P'Big P'Ja & Team Lead", action:'ยังไม่มีวิธีแก้ชัดเจน (มีเสนอ wiki/AI/markdown)', next:'หาแนวทาง knowledge base ให้ทีมเตรียมตัวก่อนประชุม', mom:"ยังไม่ได้มีการเพิ่ม process แต่ต้อง follow up P'Big and P'Jo หารือกันเพิ่มเติม", actionBy:"P'Big and P'Jo หารือกันเพิ่มเติม"},
+  {id:4,  cat:'Stop',  theme:'Requirement Consistency',       topic:'Business Requirement ไม่สอดคล้องกันระหว่าง Channel', status:'In Progress',
+    firstRaised:'Jun-26', responsible:"PO Kate, PO Scrum, Tech Lead Owner P'Ning, P'Ake", action:'ตกลงแนวทางว่า Requirement ควรเหมือนกันทุก Channel', next:'ยืนยันว่ามีการ apply แนวทางนี้กับ Requirement ใหม่จริงหรือไม่', mom:"Tech lead คุยร่วมกัน เป็นใน session process ข้อ 7 (Solution Architecture & Solution Design & Writing Technical Specification) เริ่มที่ Project CMI Bundle", actionBy:"P'Ning, P'Yu"},
+  {id:5,  cat:'Stop',  theme:'Requirement Quality',           topic:'Requirement ไม่ชัดเจนแต่ Priority สูง และ Timeline เปลี่ยนบ่อย', status:'In Progress',
+    firstRaised:'Jun-26', responsible:'-', action:'-', next:'ผลักดันให้ Requirement มาพร้อม Timeline ที่ชัดเจนก่อนเข้า sprint', mom:'มีการย้ำกับทีม PO แล้ว หากยังพบอีกอยากให้ระบุเพิ่มว่าเป็น project ไหน จะได้ scope การทำงานกันถูก', actionBy:'PO'},
+  {id:6,  cat:'Stop',  theme:'SIT/UAT Process',               topic:'ไม่มีการทำ SIT ก่อนเริ่ม UAT / ไม่ทดสอบ Integration', status:'In Progress',
+    firstRaised:'Jun-26 (ซ้ำ Jul, Aug)', responsible:'QA / Dev / squad team', action:'Aug MOM ยืนยัน: เริ่มทำ QA SIT แล้วใน Project CI, มีแผนวางร่วมกันได้ในโปรเจกต์ถัดไป, ทีมมี Process Test Integration แล้ว', next:'ติดตามว่าทุก squad ทำ SIT ก่อนส่ง UAT ตามแผนที่วางไว้ได้จริงหรือไม่', mom:"เริ่ม process SIT E2E ที่ handle by Tech Lead Owner ที่ Project Carrier (P'Ning)", actionBy:"P'Ning"},
+  {id:7,  cat:'Stop',  theme:'Code Quality',                  topic:'Spaghetti Code จากการสะสม Quick Fix', status:'Open',
+    firstRaised:'Jun-26', responsible:'SA', action:'แนะนำ Refactor แบบ incremental + เพิ่ม test coverage', next:'ติดตามความคืบหน้าการ refactor และ test coverage', mom:'ยังไม่มีการ update ใดๆ ฝากทีม Tech Lead ช่วยดู solution ต่อ', actionBy:"P'Ning, P'Yu, P'Ake"},
+  {id:8,  cat:'Stop',  theme:'Sprint Planning',                topic:'นำงานเข้า Sprint พร้อม Timeline แต่ Requirement ยังไม่ Final', status:'In Progress',
+    firstRaised:'Jun-26', responsible:'-', action:'-', next:'กำหนดเกณฑ์ definition-of-ready ก่อนงานเข้า sprint', mom:'มีการย้ำกับทีม PO แล้ว หากยังพบอีกอยาก retro ถัดไประบุเพิ่มว่าเป็น project ไหน', actionBy:'PO'},
+  {id:10, cat:'Stop',  theme:'Retro Effectiveness',           topic:'Feedback จาก Retro ไม่ถูกนำไปแก้ไขจริง', status:'In Progress',
+    firstRaised:'Jul-26 (escalate Aug)', responsible:'DM Team', action:'DM ทีมรับปากจะรวบรวมหัวข้อที่ทำแล้ว/ยังไม่ได้ทำ และให้ทุกคน raise ซ้ำพร้อมนับจำนวนครั้ง', next:'งาน tracking นี้คือ action ที่ตอบสนอง item นี้โดยตรง — ต้อง publish กลับให้ทีมเห็นทุกเดือน', mom:'อยากให้ feedback ตรงไปตรงมา ปราศจากอารมณ์ การ feedback เป็นเรื่องที่ดี', actionBy:'All'},
+  {id:11, cat:'Stop',  theme:'Cross-Team Sync',                topic:'Sync Business Requirement ข้ามทีมขาดตกบกพร่อง', status:'In Progress',
+    firstRaised:'Aug-26', responsible:'-', action:'เสนอ Session Pre-Project Setup ให้ทีม + sync end-to-end ทุกทีม', next:'ติดตามว่ามีการทำ Pre-Project Setup Session จริงในโปรเจกต์ถัดไป', mom:'เริ่มใน project ใหม่ เช่น Carrier clarify task และ cut scope กันเรียบร้อยกับทุกทีมที่เกี่ยวข้องแล้ว หากมีงานหลุดให้ดูสาเหตุเพิ่มเพื่อปรับปรุงต่อ', actionBy:"Wakanda&Nuna, Nobita&P'Te, Giant&P'Te, Jaiko&P'May, Fanstastic&P'Jo, Mandalorian&P'Jo, MIS&Nuna&P'May, Sanbox&P'Te, ES GTOJA(AS400)&P'Te, ES GOD(RPA&AI)&P'Te, IT System&Zom"},
+  {id:51, cat:'Stop',  theme:'Project Setup / Cross-Team Sync',topic:'Sync Plan UAT/Go-live ไม่ดี งานตกหล่น (เคส CMI WLB)', status:'Open',
+    firstRaised:'Sep-26', responsible:'PO, DM, BA', action:'ควรมี Project Set-up เป็น standard เดียวกันทุกโปรดักต์', next:'ติดตามว่า Project Set-up แบบใหม่ช่วยลดงานตกหล่นได้จริงหรือไม่ (เชื่อมโยงกับ ID11)', mom:'CMI WLB: register งานตกหล่น ประเมิน timeline ไม่ครบทุก impact ทำให้มีงานแทรกในปีนี้ — scope ไม่ชัด, timeline ไม่ชัด, งานเร่ง, list impact ไม่ครบ, ไม่ทำตาม flow', actionBy:'PO, DM, BA'},
+  {id:52, cat:'Stop',  theme:'SIT/UAT Planning',               topic:'UAT Plan ไม่มี Detail แผนทดสอบรายวัน', status:'Open',
+    firstRaised:'Sep-26', responsible:'QA UAT', action:'QA sync plan test กับ PO/working team', next:'ติดตามว่า QA UAT ทำ detail test plan รายวันจริง (เชื่อมโยงกับ ID35, ID36)', mom:'Auto Billing ต้อง sync deploy แต่ไม่มีคน UAT — sync แล้ว QA Lead ตอบ PO ไม่ได้ว่าจะทดสอบช่วงไหน อาจ impact user ว่าทดสอบไม่ทัน', actionBy:'QA UAT'},
+  {id:53, cat:'Stop',  theme:'Requirement Documentation Standard', topic:'High Level Requirement เขียนไม่เป็น Standard เดียวกัน', status:'Open',
+    firstRaised:'Sep-26', responsible:'PO, DM', action:'-', next:'กำหนด standard/template เขียน High Level Requirement ให้ครอบคลุมทั้งมุม Business และ System Requirement', mom:'Feature ที่ impact แต่ละ project แตกต่างกันทำให้ standard ไม่เหมือนกัน — High Level Requirement ควรประเมินทั้งมุม Business และ System Requirement', actionBy:'PO, DM'},
+  {id:54, cat:'Stop',  theme:'Project Setup / Cross-Team Sync',topic:'Meeting Project Set-up ไม่มี Objective ชัดเจน', status:'Open',
+    firstRaised:'Sep-26', responsible:'DM', action:'แบ่ง Project Set-up เป็น 2 รอบ: รอบ1 คุยรายละเอียด+แตก task, รอบ2 review impact ร่วมกัน (project เล็กทำรอบเดียวได้)', next:'ทดลองกับ Next Project (CR ประกันชีวิต) แล้วประเมินผล (เชื่อมโยงกับ ID11, ID51)', mom:'หาก Project Set-up ไหนไม่ work ให้ raise มาได้เลย — Next Project คือ CR ประกันชีวิต ใช้ทดลอง format ใหม่', actionBy:'DM'},
+  {id:55, cat:'Stop',  theme:'IO/Ticket Tracking',             topic:'งาน Support Infra/DBA เข้า Sprint แบบเร่งด่วนไม่มี Buffer', status:'Open',
+    firstRaised:'Sep-26', responsible:'SA & Scrum Team', action:'Monitor case ต่อเนื่อง, DM record วันที่เปิด IO expect, PO&SA ประเมิน Task Infra/DBA ล่วงหน้า, ประเมินให้ครบใน Step Architecture Solution Design', next:'ติดตามว่ามีการประเมิน Infra/DBA task ล่วงหน้าจริงในโปรเจกต์ถัดไป (เชื่อมโยงกับ ID18)', mom:'เคส Insure Connect: register ปุ๊บขอเข้าทันที ขอภายในวันพรุ่งนี้ — บางงานมี IO บางงานไม่มี IO', actionBy:'DM, PO, SA'},
+  {id:19, cat:'Start', theme:'Data Consistency',               topic:'Data Type/Required ควรตรงกันตลอด Flow', status:'In Progress',
+    firstRaised:'Jun-26 (ซ้ำ Aug)', responsible:'-', action:'จัดทำ Cross-Team Grooming เพื่อให้รู้ Design ของแต่ละทีม', next:'ติดตามว่า Cross-Team Grooming เกิดขึ้นสม่ำเสมอ', mom:'ถูกแก้ไขใน session process ข้อ 5, 7', actionBy:'Tech Lead'},
+  {id:20, cat:'Start', theme:'Business Rules',                 topic:'Define Business Rule ให้ชัดในทุก Scenario', status:'In Progress',
+    firstRaised:'Jun-26', responsible:'-', action:'Cross-Team Grooming เพื่อให้ logic ตรงกันทุกระบบ', next:'ติดตามผล Cross-Team Grooming', mom:'ถูกแก้ไขใน session process ข้อ 5, 7', actionBy:'PO'},
+  {id:21, cat:'Start', theme:'3rd Party Spec',                 topic:'แนวทางออกแบบ Spec 3rd Party เริ่มจาก FE Requirement ก่อน', status:'In Progress',
+    firstRaised:'Jun-26', responsible:'-', action:'เริ่มจาก Frontend requirement ก่อน แล้วค่อยเทียบกับข้อมูลที่ 3rd Party ส่งให้ได้', next:'ติดตามการ apply แนวทางนี้กับโปรเจกต์ใหม่', mom:'Frontend ช้า ทำให้ backend ต้อง design ก่อน เพราะถ้ารอจะไม่ทันกับ timeline (เห็นได้จาก Project Life) — ดู Process ข้อ 5, 7 ว่า apply ได้หรือไม่', actionBy:'DM & Tech Lead'},
+  {id:22, cat:'Start', theme:'Plan Tracking',                  topic:'อัพเดทแพลนทันทีเมื่อหลุด Commit', status:'Open',
+    firstRaised:'Jun-26', responsible:'PM, DM', action:'PM ควรอัพเดทและติดตาม ประสานงาน', next:'หาวิธี update status ให้ effective ทั้ง Internal/External scrum team', mom:'scrum team update กับ PO, DM (stand up / MS Teams chat) ก็ได้ หาก update กับ PO แล้วให้ PO แจ้ง DM ด้วย', actionBy:'SA, PO, DM'},
+  {id:23, cat:'Start', theme:'Tooling',                        topic:'Connector เชื่อม Project Tracking Tool Real-time', status:'Open',
+    firstRaised:'Jun-26', responsible:'DM Team', action:'เสนอพิจารณาเครื่องมือ เช่น Jira/Asana/ClickUp connector', next:'ประเมินความเป็นไปได้และ owner ในการ implement', mom:"DM update ให้เป็น status ล่าสุด — พี่หนิงเสนอให้มี board เดียวที่ใช้ร่วมกันทั้ง tech, PO ลดเวลา tracking/meeting", actionBy:'DM'},
+  {id:24, cat:'Start', theme:'Role & Responsibility',          topic:'กำหนด Role and Responsibility ชัดเจนตั้งแต่ต้น Project', status:'In Progress',
+    firstRaised:'Jun-26', responsible:'-', action:'โปรเจกต์ใหม่ (เช่น Carrier) กำหนด RACI ไว้แล้ว', next:'ขยายผลไปยังโปรเจกต์เดิมที่ยังไม่มี RACI ชัดเจน', mom:'ทำเป็น document in scope, out scope ว่าใครต้องทำอะไร', actionBy:'DM'},
+  {id:29, cat:'Start', theme:'Sprint Goal',                    topic:'Set Sprint Goal ครอบคลุม Dev + SIT + Fix Issue เสร็จ', status:'In Progress',
+    firstRaised:'Jul-26 (ซ้ำ Aug)', responsible:'Squad Team', action:'ตกลง set sprint goal ร่วมกัน + วางแผน SIT ล่วงหน้า; Aug: QA SIT เริ่มนัดวางแผนจริงในโปรเจกต์ CI', next:'ติดตามผลใน sprint ถัดไปว่าทำได้ตามเป้า', mom:'หลายทีม set sprint goal แล้ว PO check scrum team อีกครั้ง', actionBy:'PO & SA'},
+  {id:33, cat:'Start', theme:'Solution Design',                topic:'IT Solution Refinement (Project Grooming)', status:'In Progress',
+    firstRaised:'Jul-26', responsible:'Tech Lead (Owner)', action:'เริ่มใช้กับ Carrier Core แล้ว', next:'ขยายผลไปโปรเจกต์อื่น', mom:'เริ่มที่ Project Carrier', actionBy:'Tech Lead'},
+  {id:34, cat:'Start', theme:'Solution Design',                topic:'เข้าใจ Business Gap/System Gap + ประเมิน CR Impact', status:'In Progress',
+    firstRaised:'Jul-26 (ซ้ำ Aug)', responsible:'Tech Lead/SA/BA', action:'คุยกัน cross-team มากขึ้น, sync project, ปรึกษาทีมก่อนตอบ timeline การประเมิน impact', next:'ติดตามว่ามีการคุย cross-team ก่อนออกแบบ solution จริงทุกครั้ง', mom:'เริ่มใส่ slot timeline ของแต่ละ scrum team', actionBy:'PO & Tech Lead'},
+  {id:35, cat:'Start', theme:'SIT Planning',                   topic:'QA SIT นัดประชุมวางแผน E2E Test Scenario', status:'In Progress',
+    firstRaised:'Aug-26', responsible:'QA Scrum Team', action:'เริ่มทำใน Project CI แล้ว, โปรเจกต์หน้าวางแผนร่วมกันได้เลย', next:'ติดตามผลในโปรเจกต์ถัดไป', mom:'เริ่มที่ Project Carrier', actionBy:"P'Ning"},
+  {id:37, cat:'Start', theme:'E2E Visibility',                 topic:'มองภาพรวม E2E/Data Flow ระหว่างทีมมากขึ้น', status:'In Progress',
+    firstRaised:'Aug-26', responsible:'QA/PO/BA', action:'มี Business Process Swim Lane, PO มี Overview Flow, BA เล่า overview ตอน refinement; มีข้อเสนอเพิ่ม version control เอกสารกลาง', next:'ทำ document versioning ของเอกสารกลาง (swim lane) ให้เป็น single source of truth', mom:'-', actionBy:'PO'},
+  {id:50, cat:'Start', theme:'Retro Effectiveness',            topic:'เพิ่ม Retro ภายใน Scrum Team ของตัวเอง', status:'Open',
+    firstRaised:'Sep-26', responsible:'PO & Scrum Team', action:'-', next:'เริ่มทำ retro ระดับ scrum team คู่ขนานกับ Monthly All-Squad Retro (เชื่อมโยงกับ ID10, ID30)', mom:'แนวคิดใหม่จาก Sep retro — ให้แต่ละ Scrum Team ทำ retro ภายในทีมเองด้วย', actionBy:'PO & Scrum Team'},
+];
 
-  const TABLES = [
-    { id: 1, name: "โต๊ะ 1", capacity: 2 },
-    { id: 2, name: "โต๊ะ 2", capacity: 4 },
-    { id: 3, name: "โต๊ะ 3", capacity: 4 },
-    { id: 4, name: "โต๊ะ 4", capacity: 6 }
-  ];
+let selected = new Set();
+let expanded = new Set();
+let submitted = false;
+let currentFilter = 'All';
+let supabaseClient = null;
+let voterKey = null;
 
-  const OPEN_HOUR = 11;
-  const LAST_SLOT_HOUR = 20; // last bookable start time (shop closes 21:00)
-  const TIME_SLOTS = [];
-  for (let h = OPEN_HOUR; h <= LAST_SLOT_HOUR; h++) {
-    TIME_SLOTS.push(String(h).padStart(2, "0") + ":00");
+function getVoterKey(){
+  let k = localStorage.getItem('ins_retro_voter_key');
+  if (!k) {
+    k = (crypto.randomUUID ? crypto.randomUUID() : 'v-' + Date.now() + '-' + Math.random().toString(16).slice(2));
+    localStorage.setItem('ins_retro_voter_key', k);
   }
-  const REFRESH_INTERVAL_MS = 20000;
+  return k;
+}
 
-  let supabaseClient = null;
-  let configOk = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
-  if (configOk) {
-    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  }
+function statusBadge(s){
+  return s === 'Open'
+    ? '<span class="badge status-open">Open</span>'
+    : '<span class="badge status-inprogress">In Progress</span>';
+}
+function catBadge(c){
+  return c === 'Start'
+    ? '<span class="badge cat-start">🚀 Start</span>'
+    : '<span class="badge cat-stop">🛑 Stop</span>';
+}
 
-  const dateInput = document.getElementById("date-input");
-  const todayBtn = document.getElementById("today-btn");
-  const gridArea = document.getElementById("grid-area");
-  const selectedDateLabel = document.getElementById("selected-date-label");
-  const toastEl = document.getElementById("toast");
-
-  const bookingOverlay = document.getElementById("booking-overlay");
-  const bookingSub = document.getElementById("booking-sub");
-  const bookingForm = document.getElementById("booking-form");
-  const capacityWarning = document.getElementById("capacity-warning");
-  const formError = document.getElementById("form-error");
-  const cancelBtn = document.getElementById("cancel-btn");
-  const submitBtn = document.getElementById("submit-btn");
-  const custName = document.getElementById("cust-name");
-  const custPhone = document.getElementById("cust-phone");
-  const custParty = document.getElementById("cust-party");
-
-  const confirmOverlay = document.getElementById("confirm-overlay");
-  const confirmTicket = document.getElementById("confirm-ticket");
-  const confirmCloseBtn = document.getElementById("confirm-close-btn");
-
-  let currentDate = null;         // "YYYY-MM-DD"
-  let bookedSet = new Set();      // "tableId|HH:MM"
-  let pollTimer = null;
-  let pendingSelection = null;    // { table, slot }
-
-  // ---------- helpers ----------
-  function todayStr() {
-    const d = new Date();
-    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-  }
-  function key(tableId, slot) { return tableId + "|" + slot; }
-  function isPastSlot(dateStr, slot) {
-    if (dateStr !== todayStr()) return false;
-    const now = new Date();
-    const [h] = slot.split(":").map(Number);
-    return now.getHours() >= h;
-  }
-  function formatDateLabel(dateStr) {
-    if (!dateStr) return "";
-    const d = new Date(dateStr + "T00:00:00");
-    return d.toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-  }
-  function showToast(msg, ms) {
-    toastEl.textContent = msg;
-    toastEl.classList.add("show");
-    clearTimeout(showToast._t);
-    showToast._t = setTimeout(() => toastEl.classList.remove("show"), ms || 3200);
-  }
-  function openOverlay(el) { el.classList.add("open"); }
-  function closeOverlay(el) { el.classList.remove("open"); }
-
-  // ---------- data loading ----------
-  async function loadAvailability(dateStr) {
-    if (!configOk) {
-      gridArea.innerHTML = '<div class="empty-state">ยังไม่ได้ตั้งค่า Supabase — กรุณาใส่ SUPABASE_URL และ SUPABASE_ANON_KEY ในไฟล์ index.html</div>';
-      return;
-    }
-    const { data, error } = await supabaseClient
-      .from("reservation_status")
-      .select("table_id,time_slot")
-      .eq("res_date", dateStr);
-
-    if (error) {
-      console.error(error);
-      showToast("โหลดข้อมูลไม่สำเร็จ กรุณาลองใหม่");
-      return;
-    }
-
-    bookedSet = new Set();
-    (data || []).forEach(row => {
-      const hhmm = String(row.time_slot).slice(0, 5);
-      bookedSet.add(key(row.table_id, hhmm));
-    });
-    renderGrid(dateStr);
-  }
-
-  function startPolling(dateStr) {
-    stopPolling();
-    pollTimer = setInterval(() => loadAvailability(dateStr), REFRESH_INTERVAL_MS);
-  }
-  function stopPolling() {
-    if (pollTimer) clearInterval(pollTimer);
-    pollTimer = null;
-  }
-
-  // ---------- rendering ----------
-  function renderGrid(dateStr) {
-    let thead = '<tr><th>โต๊ะ</th>' + TIME_SLOTS.map(s => `<th>${s}</th>`).join("") + "</tr>";
-    let rows = TABLES.map(t => {
-      const cells = TIME_SLOTS.map(slot => {
-        const isBooked = bookedSet.has(key(t.id, slot));
-        const isPast = isPastSlot(dateStr, slot);
-        let cls = "slot", label = "ว่าง", disabled = "";
-        if (isPast) { cls += " past"; label = "หมดเวลา"; disabled = "disabled"; }
-        else if (isBooked) { cls += " booked"; label = "ไม่ว่าง"; disabled = "disabled"; }
-        return `<td class="slot-cell"><button type="button" class="${cls}" ${disabled}
-                  data-table="${t.id}" data-slot="${slot}"
-                  aria-label="${t.name} เวลา ${slot} ${label}">${label === "ว่าง" ? slot : label}</button></td>`;
-      }).join("");
-      return `<tr><th scope="row"><span class="tname">${t.name}</span><span class="tcap">นั่งได้ ${t.capacity} คน</span></th>${cells}</tr>`;
-    }).join("");
-
-    gridArea.innerHTML = `
-      <div class="grid-wrap">
-        <div class="grid-scroll">
-          <table class="grid">
-            <thead>${thead}</thead>
-            <tbody>${rows}</tbody>
-          </table>
+function renderList(){
+  const list = document.getElementById('list');
+  const filtered = ITEMS.filter(it => currentFilter === 'All' || it.cat === currentFilter);
+  list.innerHTML = filtered.map(it => {
+    const isSel = selected.has(it.id);
+    const isOpen = expanded.has(it.id);
+    const locked = submitted ? 'locked' : '';
+    return `<div class="item ${isSel ? 'selected' : ''} ${locked}" data-id="${it.id}">
+      <div class="chk">${isSel ? '✓' : ''}</div>
+      <div class="item-body">
+        <div class="item-head">
+          <div class="badges">
+            ${catBadge(it.cat)}
+            ${statusBadge(it.status)}
+            <span class="badge theme">${it.theme}</span>
+          </div>
+          <button type="button" class="info-btn ${isOpen ? 'open' : ''}" data-role="info" data-id="${it.id}" aria-label="ดูรายละเอียด">▾</button>
+        </div>
+        <div class="topic">${it.topic}<span class="idtag">#${it.id}</span></div>
+        <div class="detail ${isOpen ? 'open' : ''}">
+          <dl>
+            <dt>First Raised</dt><dd>${it.firstRaised || '-'}</dd>
+            <dt>Responsible</dt><dd>${it.responsible || '-'}</dd>
+            <dt>Action Taken</dt><dd>${it.action || '-'}</dd>
+            <dt>Next Follow-up</dt><dd>${it.next || '-'}</dd>
+            <dt>MOM ล่าสุด</dt><dd>${it.mom || '-'}</dd>
+            <dt>Action by</dt><dd>${it.actionBy || '-'}</dd>
+          </dl>
         </div>
       </div>
-      <p class="refresh-note">ข้อมูลอัปเดตอัตโนมัติทุก 20 วินาที</p>
-    `;
+    </div>`;
+  }).join('') || '<div class="empty">ไม่มีรายการในหมวดนี้</div>';
 
-    gridArea.querySelectorAll(".slot:not([disabled])").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const tableId = Number(btn.dataset.table);
-        const slot = btn.dataset.slot;
-        const table = TABLES.find(t => t.id === tableId);
-        openBookingSheet(table, slot);
-      });
+  list.querySelectorAll('.info-btn').forEach(btn => {
+    btn.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const id = Number(btn.dataset.id);
+      if (expanded.has(id)) expanded.delete(id); else expanded.add(id);
+      renderList();
     });
-  }
-
-  // ---------- booking sheet ----------
-  function openBookingSheet(table, slot) {
-    pendingSelection = { table, slot };
-    bookingSub.textContent = `${table.name} (นั่งได้ ${table.capacity} คน) · ${formatDateLabel(currentDate)} · เวลา ${slot} น.`;
-    bookingForm.reset();
-    capacityWarning.hidden = true;
-    formError.hidden = true;
-    submitBtn.disabled = false;
-    submitBtn.textContent = "ยืนยันการจอง";
-    openOverlay(bookingOverlay);
-    setTimeout(() => custName.focus(), 50);
-  }
-
-  function findLargerFreeTable(slot, partySize, excludeTableId) {
-    return TABLES
-      .filter(t => t.id !== excludeTableId && t.capacity >= partySize)
-      .filter(t => !bookedSet.has(key(t.id, slot)))
-      .sort((a, b) => a.capacity - b.capacity)[0] || null;
-  }
-
-  custParty.addEventListener("input", () => {
-    if (!pendingSelection) return;
-    const size = Number(custParty.value);
-    const { table, slot } = pendingSelection;
-    if (size && size > table.capacity) {
-      const alt = findLargerFreeTable(slot, size, table.id);
-      capacityWarning.hidden = false;
-      capacityWarning.innerHTML = alt
-        ? `${table.name} นั่งได้สูงสุด ${table.capacity} คน สำหรับ ${size} คน แนะนำ
-           <button type="button" class="link" id="switch-table-btn">เปลี่ยนไปเป็น ${alt.name} (นั่งได้ ${alt.capacity} คน)</button> แทน`
-        : `${table.name} นั่งได้สูงสุด ${table.capacity} คน และไม่มีโต๊ะอื่นที่ว่างในเวลานี้รองรับ ${size} คนได้ — ลองเลือกเวลาอื่นดูนะคะ`;
-      const switchBtn = document.getElementById("switch-table-btn");
-      if (switchBtn && alt) {
-        switchBtn.addEventListener("click", () => {
-          pendingSelection.table = alt;
-          bookingSub.textContent = `${alt.name} (นั่งได้ ${alt.capacity} คน) · ${formatDateLabel(currentDate)} · เวลา ${slot} น.`;
-          capacityWarning.hidden = true;
-        });
-      }
-    } else {
-      capacityWarning.hidden = true;
-    }
   });
 
-  cancelBtn.addEventListener("click", () => closeOverlay(bookingOverlay));
-  bookingOverlay.addEventListener("click", (e) => { if (e.target === bookingOverlay) closeOverlay(bookingOverlay); });
-
-  bookingForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (!pendingSelection) return;
-    const { table, slot } = pendingSelection;
-    const name = custName.value.trim();
-    const phone = custPhone.value.trim();
-    const party = Number(custParty.value);
-
-    if (party > table.capacity) {
-      formError.hidden = false;
-      formError.textContent = `จำนวนคนเกินความจุของ ${table.name} กรุณาเลือกโต๊ะที่แนะนำ หรือปรับจำนวนคน`;
-      return;
-    }
-    formError.hidden = true;
-    submitBtn.disabled = true;
-    submitBtn.textContent = "กำลังบันทึก...";
-
-    const { error } = await supabaseClient.rpc("book_reservation", {
-      p_table_id: table.id,
-      p_date: currentDate,
-      p_time_slot: slot,
-      p_name: name,
-      p_phone: phone,
-      p_party_size: party
-    });
-
-    if (error) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = "ยืนยันการจอง";
-      const msg = String(error.message || "");
-      if (msg.includes("SLOT_TAKEN")) {
-        formError.hidden = false;
-        formError.textContent = "ขออภัย ช่วงเวลานี้เพิ่งถูกจองไปเมื่อครู่ กรุณาเลือกช่วงเวลาอื่น";
-        closeOverlay(bookingOverlay);
-        showToast("ช่วงเวลานี้ถูกจองไปแล้ว กำลังรีเฟรชผังโต๊ะ...");
-        loadAvailability(currentDate);
-      } else if (msg.includes("PARTY_TOO_LARGE")) {
-        formError.hidden = false;
-        formError.textContent = `จำนวนคนเกินความจุของ ${table.name}`;
+  list.querySelectorAll('.item').forEach(el => {
+    el.addEventListener('click', (ev) => {
+      if (submitted) return;
+      if (ev.target.closest('[data-role="info"]')) return;
+      const id = Number(el.dataset.id);
+      if (selected.has(id)) {
+        selected.delete(id);
       } else {
-        formError.hidden = false;
-        formError.textContent = "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง";
-        console.error(error);
+        if (selected.size >= MAX_VOTES) return;
+        selected.add(id);
       }
-      return;
-    }
+      renderList();
+      updateFooter();
+    });
+  });
+}
 
-    closeOverlay(bookingOverlay);
-    showConfirmation(table, slot, name, party);
-    loadAvailability(currentDate);
+function updateFooter(){
+  document.getElementById('selCount').textContent = selected.size;
+  const submitBtn = document.getElementById('submitBtn');
+  const editBtn = document.getElementById('editBtn');
+  if (submitted) {
+    submitBtn.style.display = 'none';
+    editBtn.style.display = 'inline-block';
+  } else {
+    submitBtn.style.display = 'inline-block';
+    editBtn.style.display = 'none';
+    submitBtn.disabled = selected.size === 0;
+    submitBtn.textContent = selected.size === 0 ? 'เลือกอย่างน้อย 1 หัวข้อ' : `ส่งโหวตของฉัน (${selected.size})`;
+  }
+}
+
+function renderResults(rows, total){
+  const wrap = document.getElementById('results');
+  const meta = document.getElementById('resultsMeta');
+  meta.textContent = total > 0
+    ? `จากผู้โหวตทั้งหมด ${total} คน (ไม่ระบุตัวตน)`
+    : 'ยังไม่มีใครโหวตเลย — เป็นคนแรกเลย!';
+
+  const withCounts = ITEMS.map(it => ({...it, count: rows[it.id] || 0}))
+    .filter(it => it.count > 0)
+    .sort((a,b) => b.count - a.count);
+
+  if (withCounts.length === 0) {
+    wrap.innerHTML = '<div class="empty">ยังไม่มีผลโหวต</div>';
+    return;
+  }
+  const max = withCounts[0].count;
+  wrap.innerHTML = withCounts.map((it, i) => {
+    const pct = Math.max(6, Math.round((it.count / max) * 100));
+    const topClass = i === 0 ? 'top1' : '';
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1);
+    return `<div class="rrow ${topClass}">
+      <div class="rrank">${medal}</div>
+      <div class="rbody">
+        <div class="rtitle">
+          <span class="txt">${catBadge(it.cat)} ${it.topic}</span>
+          <span class="cnt">${it.count}</span>
+        </div>
+        <div class="rtrack"><div class="rfill" style="width:${pct}%"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function loadResults(){
+  if (!supabaseClient) return;
+  const { data, error } = await supabaseClient.from('votes').select('item_ids');
+  if (error) { console.error('load results failed', error); return; }
+  const counts = {};
+  (data || []).forEach(row => {
+    (row.item_ids || []).forEach(id => { counts[id] = (counts[id] || 0) + 1; });
+  });
+  renderResults(counts, (data || []).length);
+}
+
+async function loadMyVote(){
+  if (!supabaseClient) return;
+  const { data, error } = await supabaseClient.from('votes').select('item_ids').eq('voter_key', voterKey).maybeSingle();
+  if (error) { console.error('load my vote failed', error); return; }
+  if (data && Array.isArray(data.item_ids) && data.item_ids.length) {
+    selected = new Set(data.item_ids);
+    submitted = true;
+    renderList();
+    updateFooter();
+  }
+}
+
+async function submitVote(){
+  if (selected.size === 0) return;
+  const itemIds = Array.from(selected);
+  const banner = document.getElementById('statusBanner');
+
+  if (!supabaseClient) {
+    banner.innerHTML = '<div class="banner err">⚠️ ยังไม่ได้ตั้งค่า Supabase — ใส่ SUPABASE_URL / SUPABASE_ANON_KEY ในไฟล์ก่อน</div>';
+    return;
+  }
+
+  const { error } = await supabaseClient.from('votes').upsert({
+    voter_key: voterKey,
+    item_ids: itemIds,
+    updated_at: new Date().toISOString(),
   });
 
-  function showConfirmation(table, slot, name, party) {
-    confirmTicket.innerHTML = `
-      <div><span>ชื่อผู้จอง</span><span>${escapeHtml(name)}</span></div>
-      <div><span>โต๊ะ</span><span>${table.name}</span></div>
-      <div><span>วันที่</span><span>${formatDateLabel(currentDate)}</span></div>
-      <div><span>เวลา</span><span>${slot} น.</span></div>
-      <div><span>จำนวนคน</span><span>${party} คน</span></div>
-    `;
-    openOverlay(confirmOverlay);
-  }
-  confirmCloseBtn.addEventListener("click", () => closeOverlay(confirmOverlay));
-  confirmOverlay.addEventListener("click", (e) => { if (e.target === confirmOverlay) closeOverlay(confirmOverlay); });
-
-  function escapeHtml(s) {
-    return s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  if (error) {
+    console.error('vote write failed', error);
+    banner.innerHTML = '<div class="banner err">⚠️ บันทึกโหวตไม่สำเร็จ กรุณาลองใหม่อีกครั้ง (' + error.message + ')</div>';
+    return;
   }
 
-  // ---------- date selection ----------
-  function selectDate(dateStr) {
-    currentDate = dateStr;
-    dateInput.value = dateStr;
-    selectedDateLabel.textContent = formatDateLabel(dateStr);
-    gridArea.innerHTML = '<div class="empty-state">กำลังโหลดผังโต๊ะ...</div>';
-    loadAvailability(dateStr);
-    startPolling(dateStr);
-  }
+  submitted = true;
+  updateFooter();
+  renderList();
+  banner.innerHTML = '<div class="banner ok">✅ บันทึกโหวตแล้ว — โหวตของคุณไม่ระบุตัวตน</div>';
+  loadResults();
+}
 
-  dateInput.min = todayStr();
-  dateInput.addEventListener("change", () => {
-    if (dateInput.value) selectDate(dateInput.value);
+document.getElementById('submitBtn').addEventListener('click', submitVote);
+document.getElementById('editBtn').addEventListener('click', () => {
+  submitted = false;
+  document.getElementById('statusBanner').innerHTML = '';
+  updateFooter();
+  renderList();
+});
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentFilter = tab.dataset.filter;
+    renderList();
   });
-  todayBtn.addEventListener("click", () => selectDate(todayStr()));
+});
 
-  // auto-select today on load
-  selectDate(todayStr());
+renderList();
+updateFooter();
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      closeOverlay(bookingOverlay);
-      closeOverlay(confirmOverlay);
-    }
-  });
-})();
+function init(){
+  voterKey = getVoterKey();
+
+  if (!SUPABASE_URL || SUPABASE_URL === "YOUR_SUPABASE_PROJECT_URL" ||
+      !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY === "YOUR_SUPABASE_ANON_PUBLIC_KEY") {
+    document.getElementById('configError').innerHTML =
+      '<div class="config-error">⚠️ <b>ยังไม่ได้ตั้งค่า Supabase</b><br>เปิดไฟล์ index.html แล้วแก้ค่า SUPABASE_URL และ SUPABASE_ANON_KEY ในบล็อก &lt;script&gt; ด้านบนของไฟล์ ตามขั้นตอนใน README ก่อน deploy จริง</div>';
+    return;
+  }
+
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  loadMyVote();
+  loadResults();
+
+  // เผื่อมีคนโหวตพร้อมกันหลายคน — รีเฟรชผลทุก 8 วิ แบบเบาๆ (ไม่ใช้ realtime subscription เพื่อลด setup)
+  setInterval(loadResults, 8000);
+}
+init();
 </script>
 </body>
 </html>
